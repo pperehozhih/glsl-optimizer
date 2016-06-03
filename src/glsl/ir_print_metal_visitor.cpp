@@ -918,7 +918,7 @@ static const char *const operator_glsl_strs[] = {
 	"vectorExtract_TODO",
 	"interpolateAtOffset_TODO",
 	"interpolateAtSample_TODO",
-	"atan2TODO", //atan2 native
+	"atan2", //atan2 native
 	"fma",
 	"clamp",
 	"mix",
@@ -933,8 +933,11 @@ static const char *const operator_glsl_strs[] = {
 
 static bool is_binop_func_like(ir_expression_operation op, const glsl_type* type)
 {
+   if (op == ir_binop_atan2)
+      return true;
 	if (op == ir_binop_mod ||
-		(op >= ir_binop_dot && op <= ir_binop_pow))
+		(op >= ir_binop_dot && op <= ir_binop_pow) ||
+       op == ir_binop_atan2)
 		return true;
 	return false;
 }
@@ -1086,20 +1089,36 @@ void ir_print_metal_visitor::visit(ir_expression *ir)
 			buffer.asprintf_append ("(");
 		}
 		buffer.asprintf_append ("%s (", operator_glsl_strs[ir->operation]);
-		
-		if (ir->operands[0])
-		{
-			if (op0cast)
-				print_cast (buffer, arg_prec, ir->operands[0]);
-			ir->operands[0]->accept(this);
-		}
-		buffer.asprintf_append (", ");
-		if (ir->operands[1])
-		{
-			if (op1cast)
-				print_cast (buffer, arg_prec, ir->operands[1]);
-			ir->operands[1]->accept(this);
-		}
+
+      if (ir->operation == ir_binop_atan2) {
+         if (ir->operands[1])
+         {
+            if (op0cast)
+               print_cast (buffer, arg_prec, ir->operands[1]);
+            ir->operands[1]->accept(this);
+         }
+         buffer.asprintf_append (", ");
+         if (ir->operands[0])
+         {
+            if (op1cast)
+               print_cast (buffer, arg_prec, ir->operands[0]);
+            ir->operands[0]->accept(this);
+         }
+      } else {
+         if (ir->operands[0])
+         {
+            if (op0cast)
+               print_cast (buffer, arg_prec, ir->operands[0]);
+            ir->operands[0]->accept(this);
+         }
+         buffer.asprintf_append (", ");
+         if (ir->operands[1])
+         {
+            if (op1cast)
+               print_cast (buffer, arg_prec, ir->operands[1]);
+            ir->operands[1]->accept(this);
+         }
+      }
 		buffer.asprintf_append (")");
 		if (ir->operation == ir_binop_mod)
             buffer.asprintf_append ("))");

@@ -958,14 +958,14 @@ builtin_builder::create_builtins()
    F(acos_native)
 
    add_function("atan",
-                _atan(glsl_type::float_type),
-                _atan(glsl_type::vec2_type),
-                _atan(glsl_type::vec3_type),
-                _atan(glsl_type::vec4_type),
-                _atan2(glsl_type::float_type),
-                _atan2(glsl_type::vec2_type),
-                _atan2(glsl_type::vec3_type),
-                _atan2(glsl_type::vec4_type),
+                _atan_native(glsl_type::float_type),
+                _atan_native(glsl_type::vec2_type),
+                _atan_native(glsl_type::vec3_type),
+                _atan_native(glsl_type::vec4_type),
+                _atan2_native(glsl_type::float_type),
+                _atan2_native(glsl_type::vec2_type),
+                _atan2_native(glsl_type::vec3_type),
+                _atan2_native(glsl_type::vec4_type),
                 NULL);
 
    add_function("atan_native",
