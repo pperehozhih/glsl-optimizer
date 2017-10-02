@@ -212,9 +212,15 @@ _mesa_print_ir_metal(exec_list *instructions,
 	ctx.prefixStr.asprintf_append ("#pragma clang diagnostic ignored \"-Wparentheses-equality\"\n");
 	ctx.prefixStr.asprintf_append ("using namespace metal;\n");
 
-	ctx.inputStr.asprintf_append("struct xlatMtlShaderInput {\n");
-	ctx.outputStr.asprintf_append("struct xlatMtlShaderOutput {\n");
-	ctx.uniformStr.asprintf_append("struct xlatMtlShaderUniform {\n");
+   if (mode == kPrintGlslVertex) {
+      ctx.inputStr.asprintf_append("struct VertShaderInput {\n");
+      ctx.outputStr.asprintf_append("struct VertShaderOutput {\n");
+      ctx.uniformStr.asprintf_append("struct VertShaderUniform {\n");
+   } else {
+      ctx.inputStr.asprintf_append("struct FragShaderInput {\n");
+      ctx.outputStr.asprintf_append("struct FragShaderOutput {\n");
+      ctx.uniformStr.asprintf_append("struct FragShaderUniform {\n");
+   }
 
 	// remove unused struct declarations
 	do_remove_unused_typedecls(instructions);
@@ -702,11 +708,14 @@ void ir_print_metal_visitor::visit(ir_function_signature *ir)
 	}
 	else
 	{
-		if (this->mode_whole == kPrintGlslFragment)
+      if (this->mode_whole == kPrintGlslFragment){
 			buffer.asprintf_append ("fragment ");
-		if (this->mode_whole == kPrintGlslVertex)
+         buffer.asprintf_append ("FragShaderOutput fragment_main (FragShaderInput _mtl_i [[stage_in]], constant FragShaderUniform& _mtl_u [[buffer(0)]]");
+      } else if (this->mode_whole == kPrintGlslVertex) {
 			buffer.asprintf_append ("vertex ");
-		buffer.asprintf_append ("xlatMtlShaderOutput xlatMtlMain (xlatMtlShaderInput _mtl_i [[stage_in]], constant xlatMtlShaderUniform& _mtl_u [[buffer(0)]]");
+         buffer.asprintf_append ("VertShaderOutput vertex_main (VertShaderInput _mtl_i [[stage_in]], constant VertShaderUniform& _mtl_u [[buffer(1)]]");
+      }
+		
 		if (!ctx.paramsStr.empty())
 		{
 			buffer.asprintf_append ("%s", ctx.paramsStr.c_str());
@@ -728,7 +737,11 @@ void ir_print_metal_visitor::visit(ir_function_signature *ir)
 	if (isMain)
 	{
 		// output struct
-		indent(); buffer.asprintf_append ("xlatMtlShaderOutput _mtl_o;\n");
+      if (this->mode_whole == kPrintGlslFragment){
+         indent(); buffer.asprintf_append ("FragShaderOutput _mtl_o;\n");
+      } else if (this->mode_whole == kPrintGlslVertex) {
+         indent(); buffer.asprintf_append ("VertShaderOutput _mtl_o;\n");
+      }
 
 		// insert postponed global assigments and variable declarations
 		assert (!globals->main_function_done);
